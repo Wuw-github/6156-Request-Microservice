@@ -55,7 +55,6 @@ def get_participants_by_id(request_id):
 @app.route('/requests/create/', methods=['GET', 'POST'])
 def add_request():
     if request.method == 'POST':
-        user = request.form['user']
         launch_date = request.form['date']
         time = request.form['time']
         start_location = request.form['start_location']
@@ -66,10 +65,10 @@ def add_request():
         if RequestBoard.checkValidation(board):
             dao = get_request_dao()
             dao.create_request(board)
-            flash('Board created')
+            # flash('Board created')
             return redirect(url_for('get_all_requests'))
-        return render_template('')
-    return render_template('')
+        return render_template('requests.html')
+    return render_template('requests.html')
 
 
 
