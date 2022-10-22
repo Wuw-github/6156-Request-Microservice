@@ -1,7 +1,5 @@
 import pymysql
 
-import os
-
 
 class RequestDAO:
     def __init__(self):
@@ -16,6 +14,23 @@ class RequestDAO:
         cur.execute("select * from ride_share_request_database.requests")
         output = cur.fetchall()
         return output
+
+    def fetch_request_by_id(self, request_id):
+        cur = self.conn.cursor()
+        sql = "select * from ride_share_request_database.requests where request_id=%s"
+        cur.execute(sql, args=request_id)
+        result = cur.fetchone()
+        return result
+
+    def fetch_participants_by_request_id(self, request_id):
+        cur = self.conn.cursor()
+        sql = "select * from ride_share_request_database.participants where request_id=%s"
+        cur.execute(sql, args=request_id)
+        result = cur.fetchall()
+        return result
+
+    def create_request(self, info):
+        pass
 
     @staticmethod
     def get_connection():
@@ -36,6 +51,5 @@ class RequestDAO:
 if __name__ == "__main__":
     #print(RequestDAO.get_connection())
     dao = RequestDAO()
-    out = dao.fetch_all_requests()
-    for row in out:
-        print(row)
+    out = dao.fetch_request_by_id(1)
+    print(out)
