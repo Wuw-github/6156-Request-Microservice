@@ -4,13 +4,22 @@ import os
 
 
 class RequestDAO:
+    def __init__(self):
+        self.name = "hihi"
+        self.conn = RequestDAO.get_connection()
 
-    def __int__(self):
-        self.conn = RequestDAO._get_connection()
+    def close(self):
+        RequestDAO.close_connection(self)
+
+    def fetch_all_requests(self):
+        cur = self.conn.cursor()
+        cur.execute("select * from ride_share_request_database.requests")
+        output = cur.fetchall()
+        return output
 
     @staticmethod
-    def _get_connection():
-
+    def get_connection():
+        print("hahaha")
         conn = pymysql.connect(
             user="okcloud",
             password="okcloudokcloud",
@@ -24,4 +33,9 @@ class RequestDAO:
     def close_connection(dao):
         dao.conn.close()
 
-
+if __name__ == "__main__":
+    #print(RequestDAO.get_connection())
+    dao = RequestDAO()
+    out = dao.fetch_all_requests()
+    for row in out:
+        print(row)
