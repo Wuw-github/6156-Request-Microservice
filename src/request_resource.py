@@ -3,10 +3,10 @@ import pymysql
 import os
 
 
-class RequestResources:
+class RequestDAO:
 
     def __int__(self):
-        pass
+        self.conn = RequestDAO._get_connection()
 
     @staticmethod
     def _get_connection():
@@ -21,13 +21,7 @@ class RequestResources:
         return conn
 
     @staticmethod
-    def get_by_key(key):
+    def close_connection(dao):
+        dao.conn.close()
 
-        sql = "SELECT * FROM ride_share_request_database.requests where guid=%s"
-        conn = RequestResources._get_connection()
-        cur = conn.cursor()
-        res = cur.execute(sql, args=key)
-        result = cur.fetchone()
-
-        return result
 
