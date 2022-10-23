@@ -6,6 +6,11 @@ from requestBoard import RequestBoard
 app = Flask(__name__)
 
 
+@app.route("/")
+def index():
+    return "hello world"
+
+
 def get_request_dao():
     if not hasattr(g, 'dao'):
         print("goes here")
@@ -61,6 +66,7 @@ def add_request():
         destination = request.form['destination']
         description = request.form['description']
         capacity = request.form['capacity']
+
         board = RequestBoard(launch_date, time, start_location, destination, description, capacity)
         if RequestBoard.checkValidation(board):
             dao = get_request_dao()
@@ -69,6 +75,9 @@ def add_request():
             return redirect(url_for('get_all_requests'))
         return render_template('requests.html')
     return render_template('requests.html')
+
+
+
 
 
 

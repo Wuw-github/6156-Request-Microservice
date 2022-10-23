@@ -3,7 +3,6 @@ import pymysql
 
 class RequestDAO:
     def __init__(self):
-        self.name = "hihi"
         self.conn = RequestDAO.get_connection()
 
     def close(self):
@@ -30,6 +29,18 @@ class RequestDAO:
         return result
 
     def create_request(self, info):
+        pass
+
+    def create_participant(self, request_id, user_id):
+        pass
+
+    def update_request(self, request_id, info):
+        pass
+
+    def delete_request(self, request_id):
+        pass
+
+    def delete_participant(self, request_id, user_id):
         pass
 
     @staticmethod
