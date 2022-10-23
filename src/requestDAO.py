@@ -37,11 +37,20 @@ class RequestDAO:
     def update_request(self, request_id, info):
         pass
 
-    def delete_request(self, request_id):
-        pass
+    def _delete_request(self, request_id):
+        cur = self.conn.cursor()
+        sql = "delete from ride_share_request_database.requests where request_id=%s"
+        cur.execute(sql, request_id)
 
     def delete_participant(self, request_id, user_id):
-        pass
+        cur = self.conn.cursor()
+        sql = "delete from ride_share_request_database.participants where request_id=%s, user_id=%s"
+        cur.execute(sql, request_id, user_id)
+
+        participants = self.fetch_participants_by_request_id(request_id)
+        if not participants:
+            self._delete_request(request_id)
+
 
     @staticmethod
     def get_connection():

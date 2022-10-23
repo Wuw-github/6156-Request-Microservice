@@ -6,16 +6,16 @@ from requestBoard import RequestBoard
 app = Flask(__name__)
 
 
-@app.route("/")
-def index():
-    return "hello world"
-
-
 def get_request_dao():
     if not hasattr(g, 'dao'):
         print("goes here")
         g.dao = RequestDAO()
     return g.dao
+
+
+def check_user_login():
+    if not hasattr(g, 'user_id'):
+        g.user_id = 1
 
 
 @app.route("/requests", methods=["GET"])
@@ -44,17 +44,22 @@ def get_request_by_id(request_id):
     return rsp
 
 
-@app.route("/requests/<request_id>/participants", methods=["GET"])
+@app.route("/requests/<request_id>/participants", methods=["GET", "DELETE"])
 def get_participants_by_id(request_id):
-    dao = get_request_dao()
-    result = dao.fetch_participants_by_request_id(request_id)
+    if request.method == "GET":
+        dao = get_request_dao()
+        result = dao.fetch_participants_by_request_id(request_id)
 
-    if result:
-        rsp = Response(json.dumps(result, default=str), status=200, content_type="app.json")
-    else:
-        rsp = Response("NOT FOUND", status=404, content_type="text/plain")
+        if result:
+            rsp = Response(json.dumps(result, default=str), status=200, content_type="app.json")
+        else:
+            rsp = Response("NOT FOUND", status=404, content_type="text/plain")
 
-    return rsp
+        return rsp
+    if request.method == "DELETE":
+        dao = get_request_dao()
+        dao.delete_participant(request_id, g.user_id)
+        return redirect(url_for("get_all_requests"))
 
 
 @app.route('/requests/create/', methods=['GET', 'POST'])
@@ -75,7 +80,6 @@ def add_request():
             return redirect(url_for('get_all_requests'))
         return render_template('requests.html')
     return render_template('requests.html')
-
 
 
 
