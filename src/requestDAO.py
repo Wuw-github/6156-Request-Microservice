@@ -48,7 +48,7 @@ class RequestDAO:
     def update_request(self, request_id, info):
         cur = self.conn.cursor()
         sql = """
-            UPDATE requests
+            UPDATE ride_share_request_database.requests
             SET launch_date=%s, start_time=%s, start_location=%s, destination=%s, description=%s, capacity=%s
             WHERE request_id=%s
               """

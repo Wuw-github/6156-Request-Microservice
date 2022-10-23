@@ -31,17 +31,30 @@ def get_all_requests():
     return rsp
 
 
-@app.route("/requests/<request_id>", methods=["GET"])
+@app.route("/requests/<request_id>", methods=["GET", "POST", "PUT", "DELETE"])
 def get_request_by_id(request_id):
     dao = get_request_dao()
-    result = dao.fetch_request_by_id(request_id)
+    if request.method == "GET":
 
-    if result:
-        rsp = Response(json.dumps(result, default=str), status=200, content_type="app.json")
-    else:
-        rsp = Response("NOT FOUND", status=404, content_type="text/plain")
+        result = dao.fetch_request_by_id(request_id)
 
-    return rsp
+        if result:
+            rsp = Response(json.dumps(result, default=str), status=200, content_type="app.json")
+        else:
+            rsp = Response("NOT FOUND", status=404, content_type="text/plain")
+
+        return rsp
+
+    check_user_login()
+    if request.method == "PUT":
+        board = process_form_for_board(request.form)
+        dao.update_request(request_id, board)
+        return redirect(url_for('get_all_requests', request_id=request_id))
+
+    if request.method == "DELETE":
+        dao.delete_participant(request_id, g.user_id)
+
+        return redirect(url_for(get_all_requests))
 
 
 @app.route("/requests/<request_id>/participants", methods=["GET", "DELETE"])
@@ -63,31 +76,38 @@ def get_participants_by_id(request_id):
         return redirect(url_for("get_all_requests"))
 
 
-@app.route('/requests/create/', methods=['GET', 'POST'])
+@app.route("/requests/<request_id>/join", methods=['POST'])
+def join_request(request_id):
+    check_user_login()
+    dao = get_request_dao()
+    dao.create_participant(request_id, g.user_id)
+    return redirect(url_for('get_participants_by_id', request_id=request_id))
+
+
+def process_form_for_board(form):
+    launch_date = request.form['date']
+    time = request.form['time']
+    start_location = request.form['start_location']
+    destination = request.form['destination']
+    description = request.form['description']
+    capacity = request.form['capacity']
+
+    board = RequestBoard(launch_date, time, start_location, destination, description, capacity)
+    return board
+
+
+@app.route('/requests/create/', methods=['GET', "POST"])
 def add_request():
     check_user_login()
     if request.method == 'POST':
-        launch_date = request.form['date']
-        time = request.form['time']
-        start_location = request.form['start_location']
-        destination = request.form['destination']
-        description = request.form['description']
-        capacity = request.form['capacity']
-
-        board = RequestBoard(launch_date, time, start_location, destination, description, capacity)
+        board = process_form_for_board(request.form)
         if RequestBoard.checkValidation(board):
             dao = get_request_dao()
             dao.create_request(board, g.user_id)
             # flash('Board created')
             return redirect(url_for('get_all_requests'))
-        return render_template('requests.html')
+        return redirect(url_for('add_request'))
     return render_template('requests.html')
-
-
-
-
-
-
 
 
 if __name__ == "__main__":
