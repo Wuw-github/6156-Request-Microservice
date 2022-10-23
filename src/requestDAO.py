@@ -46,7 +46,13 @@ class RequestDAO:
         cur.execute(sql, [request_id, user_id])
 
     def update_request(self, request_id, info):
-        pass
+        cur = self.conn.cursor()
+        sql = """
+            UPDATE requests
+            SET launch_date=%s, start_time=%s, start_location=%s, destination=%s, description=%s, capacity=%s
+            WHERE request_id=%s
+              """
+        cur.execute(sql, [info.date, info.time, info.start_loc, info.dest, info.description, info.capacity, request_id])
 
     def _delete_request(self, request_id):
         cur = self.conn.cursor()
