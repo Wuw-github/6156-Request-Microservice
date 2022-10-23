@@ -46,6 +46,7 @@ def get_request_by_id(request_id):
 
 @app.route("/requests/<request_id>/participants", methods=["GET", "DELETE"])
 def get_participants_by_id(request_id):
+    check_user_login()
     if request.method == "GET":
         dao = get_request_dao()
         result = dao.fetch_participants_by_request_id(request_id)
@@ -64,6 +65,7 @@ def get_participants_by_id(request_id):
 
 @app.route('/requests/create/', methods=['GET', 'POST'])
 def add_request():
+    check_user_login()
     if request.method == 'POST':
         launch_date = request.form['date']
         time = request.form['time']
@@ -75,7 +77,7 @@ def add_request():
         board = RequestBoard(launch_date, time, start_location, destination, description, capacity)
         if RequestBoard.checkValidation(board):
             dao = get_request_dao()
-            dao.create_request(board)
+            dao.create_request(board, g.user_id)
             # flash('Board created')
             return redirect(url_for('get_all_requests'))
         return render_template('requests.html')

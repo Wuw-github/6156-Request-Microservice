@@ -28,11 +28,22 @@ class RequestDAO:
         result = cur.fetchall()
         return result
 
-    def create_request(self, info):
-        pass
+    def create_request(self, info, user_id):
+        sql = "insert into ride_share_request_database.requests" \
+              "(launch_date, start_time, start_location, destination, description, capacity) " \
+              "values (%s, %s, %s, %s, %s, %s)"
+
+        cur = self.conn.cursor()
+        cur.execute(sql, [info.date, info.time, info.start_loc, info.dest, info.description, info.capacity])
+
+        request_id = cur.lastrowid
+        self.create_participant(request_id, user_id)
 
     def create_participant(self, request_id, user_id):
-        pass
+        sql = "insert into ride_share_request_database.participants (request_id, user_id)" \
+              "values (%s, %s)"
+        cur = self.conn.cursor()
+        cur.execute(sql, [request_id, user_id])
 
     def update_request(self, request_id, info):
         pass
@@ -44,13 +55,12 @@ class RequestDAO:
 
     def delete_participant(self, request_id, user_id):
         cur = self.conn.cursor()
-        sql = "delete from ride_share_request_database.participants where request_id=%s, user_id=%s"
-        cur.execute(sql, request_id, user_id)
+        sql = "delete from ride_share_request_database.participants where request_id=%s and user_id=%s"
+        cur.execute(sql, [request_id, user_id])
 
         participants = self.fetch_participants_by_request_id(request_id)
         if not participants:
             self._delete_request(request_id)
-
 
     @staticmethod
     def get_connection():
@@ -68,8 +78,9 @@ class RequestDAO:
     def close_connection(dao):
         dao.conn.close()
 
+
 if __name__ == "__main__":
-    #print(RequestDAO.get_connection())
+    # print(RequestDAO.get_connection())
     dao = RequestDAO()
     out = dao.fetch_request_by_id(1)
     print(out)
