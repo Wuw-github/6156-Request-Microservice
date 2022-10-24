@@ -2,13 +2,13 @@ from flask import Flask, Response, request, g, render_template, url_for, redirec
 import json
 from requestDAO import RequestDAO
 from requestBoard import RequestBoard
+from response_service import Paginate
 
 app = Flask(__name__)
 
 
 def get_request_dao():
     if not hasattr(g, 'dao'):
-        print("goes here")
         g.dao = RequestDAO()
     return g.dao
 
@@ -23,15 +23,17 @@ def get_all_requests():
     dao = get_request_dao()
     result = dao.fetch_all_requests()
 
-    if result:
-        rsp = Response(json.dumps(result, default=str), status=200, content_type="app.json")
+    rsp = {}
+    Paginate.paginate(request.path, result, request.args, rsp)
+    if rsp['data']:
+        rsp = Response(json.dumps(rsp, default=str), status=200, content_type="app.json")
     else:
         rsp = Response("NOT FOUND", status=404, content_type="text/plain")
 
     return rsp
 
 
-@app.route("/requests/<request_id>", methods=["GET", "POST", "PUT", "DELETE"])
+@app.route("/requests/<request_id>", methods=["GET", "PUT", "DELETE"])
 def get_request_by_id(request_id):
     dao = get_request_dao()
     if request.method == "GET":
