@@ -66,12 +66,15 @@ def get_participants_by_id(request_id):
         dao = get_request_dao()
         result = dao.fetch_participants_by_request_id(request_id)
 
-        if result:
-            rsp = Response(json.dumps(result, default=str), status=200, content_type="app.json")
+        rsp = {}
+        Paginate.paginate(request.path, result, request.args, rsp)
+        if rsp['data']:
+            rsp = Response(json.dumps(rsp, default=str), status=200, content_type="app.json")
         else:
             rsp = Response("NOT FOUND", status=404, content_type="text/plain")
 
         return rsp
+
     if request.method == "DELETE":
         dao = get_request_dao()
         dao.delete_participant(request_id, g.user_id)

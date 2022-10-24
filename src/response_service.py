@@ -2,7 +2,7 @@ class Paginate:
 
     @staticmethod
     def paginate(url, result, args, response):
-        limit = 2 if args.get('limit') is None else int(args.get('limit'))
+        limit = 6 if args.get('limit') is None else int(args.get('limit'))
         offset = 0 if args.get('offset') is None else int(args.get('offset'))
 
         if len(result) < offset or limit < 0:
