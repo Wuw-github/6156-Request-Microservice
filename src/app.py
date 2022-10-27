@@ -59,7 +59,7 @@ def get_request_by_id(request_id):
         return redirect(url_for(get_all_requests))
 
 
-@app.route("/requests/<request_id>/participants", methods=["GET", "DELETE"])
+@app.route("/requests/<request_id>/participants", methods=["GET", "DELETE", "POST"])
 def get_participants_by_id(request_id):
     check_user_login()
     if request.method == "GET":
@@ -80,13 +80,11 @@ def get_participants_by_id(request_id):
         dao.delete_participant(request_id, g.user_id)
         return redirect(url_for("get_all_requests"))
 
-
-@app.route("/requests/<request_id>/join", methods=['POST'])
-def join_request(request_id):
-    check_user_login()
-    dao = get_request_dao()
-    dao.create_participant(request_id, g.user_id)
-    return redirect(url_for('get_participants_by_id', request_id=request_id))
+    if request.method == "POST":
+        check_user_login()
+        dao = get_request_dao()
+        dao.create_participant(request_id, g.user_id)
+        return redirect(url_for('get_participants_by_id', request_id=request_id))
 
 
 def process_form_for_board(form):
