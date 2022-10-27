@@ -2,7 +2,7 @@ from flask import Flask, Response, request, g, render_template, url_for, redirec
 import json
 from requestDAO import RequestDAO
 from requestBoard import RequestBoard
-from response_service import Paginate
+from response_service import Paginate, Hateoas
 
 app = Flask(__name__)
 
@@ -21,11 +21,11 @@ def check_user_login():
 @app.route("/requests", methods=["GET"])
 def get_all_requests():
     dao = get_request_dao()
-    result = dao.fetch_all_requests()
+    result = dao.fetch_all_requests(request.args)
 
     rsp = {}
     Paginate.paginate(request.path, result, request.args, rsp)
-    Paginate.link_request_to_participants_by_id(rsp)
+    Hateoas.link_request_to_participants_by_id(rsp)
     if rsp['data']:
         rsp = Response(json.dumps(rsp, default=str), status=200, content_type="app.json")
     else:
@@ -38,11 +38,12 @@ def get_all_requests():
 def get_request_by_id(request_id):
     dao = get_request_dao()
     if request.method == "GET":
-
+        rsp = {}
         result = dao.fetch_request_by_id(request_id)
-
-        if result:
-            rsp = Response(json.dumps(result, default=str), status=200, content_type="app.json")
+        Paginate.paginate(request.path, [result], request.args, rsp)
+        Hateoas.link_request_to_participants_by_id(rsp)
+        if rsp['data']:
+            rsp = Response(json.dumps(rsp, default=str), status=200, content_type="app.json")
         else:
             rsp = Response("NOT FOUND", status=404, content_type="text/plain")
 
@@ -69,7 +70,7 @@ def get_participants_by_id(request_id):
 
         rsp = {}
         Paginate.paginate(request.path, result, request.args, rsp)
-        Paginate.link_participant_to_user_by_id(rsp)
+        Hateoas.link_participant_to_user_by_id(rsp)
         if rsp['data']:
             rsp = Response(json.dumps(rsp, default=str), status=200, content_type="app.json")
         else:

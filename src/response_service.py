@@ -25,9 +25,10 @@ class Paginate:
             response['next'] = url + '?offset=%d&limit=%d' % (start_cpy, limit)
 
         response['data'] = result[offset:offset + limit]
-
         return response
 
+
+class Hateoas:
     @staticmethod
     def link_request_to_participants_by_id(response):
         for entry in response["data"]:

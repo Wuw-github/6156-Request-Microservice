@@ -8,9 +8,16 @@ class RequestDAO:
     def close(self):
         RequestDAO.close_connection(self)
 
-    def fetch_all_requests(self):
+    def fetch_all_requests(self, args):
         cur = self.conn.cursor()
-        cur.execute("select * from ride_share_request_database.requests")
+        sql = "select * from ride_share_request_database.requests where (1=1)"
+        if args.get('start'):
+            sql += f" and (start_location='{args.get('start')}')"
+        if args.get('destination'):
+            sql += f" and (destination='{args.get('destination')}')"
+        if args.get('time'):
+            sql += f" and (start_time='{args.get('time')}')"
+        cur.execute(sql)
         output = cur.fetchall()
         return output
 
