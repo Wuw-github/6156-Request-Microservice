@@ -25,6 +25,7 @@ def get_all_requests():
 
     rsp = {}
     Paginate.paginate(request.path, result, request.args, rsp)
+    Paginate.link_request_to_participants_by_id(rsp)
     if rsp['data']:
         rsp = Response(json.dumps(rsp, default=str), status=200, content_type="app.json")
     else:
@@ -68,6 +69,7 @@ def get_participants_by_id(request_id):
 
         rsp = {}
         Paginate.paginate(request.path, result, request.args, rsp)
+        Paginate.link_participant_to_user_by_id(rsp)
         if rsp['data']:
             rsp = Response(json.dumps(rsp, default=str), status=200, content_type="app.json")
         else:
