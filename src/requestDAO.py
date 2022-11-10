@@ -10,7 +10,7 @@ class RequestDAO:
 
     def fetch_all_requests(self, args):
         cur = self.conn.cursor()
-        sql = "select * from ride_share_request_database.requests where (1=1)"
+        sql = "select * from requests where (1=1)"
         if args.get('start'):
             sql += f" and (start_location='{args.get('start')}')"
         if args.get('destination'):
@@ -23,20 +23,20 @@ class RequestDAO:
 
     def fetch_request_by_id(self, request_id):
         cur = self.conn.cursor()
-        sql = "select * from ride_share_request_database.requests where request_id=%s"
+        sql = "select * from requests where request_id=%s"
         cur.execute(sql, args=request_id)
         result = cur.fetchone()
         return result
 
     def fetch_participants_by_request_id(self, request_id):
         cur = self.conn.cursor()
-        sql = "select * from ride_share_request_database.participants where request_id=%s"
+        sql = "select * from participants where request_id=%s"
         cur.execute(sql, args=request_id)
         result = cur.fetchall()
         return result
 
     def create_request(self, info, user_id):
-        sql = "insert into ride_share_request_database.requests" \
+        sql = "insert into requests" \
               "(launch_date, start_time, start_location, destination, description, capacity) " \
               "values (%s, %s, %s, %s, %s, %s)"
 
@@ -45,9 +45,10 @@ class RequestDAO:
 
         request_id = cur.lastrowid
         self.create_participant(request_id, user_id)
+        print("new request_id", request_id)
 
     def create_participant(self, request_id, user_id):
-        sql = "insert into ride_share_request_database.participants (request_id, user_id)" \
+        sql = "insert into participants (request_id, user_id)" \
               "values (%s, %s)"
         cur = self.conn.cursor()
         cur.execute(sql, [request_id, user_id])
@@ -55,7 +56,7 @@ class RequestDAO:
     def update_request(self, request_id, info):
         cur = self.conn.cursor()
         sql = """
-            UPDATE ride_share_request_database.requests
+            UPDATE requests
             SET launch_date=%s, start_time=%s, start_location=%s, destination=%s, description=%s, capacity=%s
             WHERE request_id=%s
               """
@@ -63,12 +64,12 @@ class RequestDAO:
 
     def _delete_request(self, request_id):
         cur = self.conn.cursor()
-        sql = "delete from ride_share_request_database.requests where request_id=%s"
+        sql = "delete from requests where request_id=%s"
         cur.execute(sql, request_id)
 
     def delete_participant(self, request_id, user_id):
         cur = self.conn.cursor()
-        sql = "delete from ride_share_request_database.participants where request_id=%s and user_id=%s"
+        sql = "delete from participants where request_id=%s and user_id=%s"
         cur.execute(sql, [request_id, user_id])
 
         participants = self.fetch_participants_by_request_id(request_id)
@@ -79,12 +80,13 @@ class RequestDAO:
     def get_connection():
         print("hahaha")
         conn = pymysql.connect(
-            user="okcloud",
-            password="okcloudokcloud",
-            host="okcloud-requests-database.cw2ylftvdgpn.us-east-1.rds.amazonaws.com",
+            user="hbstudent",
+            password="hbstudent",
+            host="localhost",
             cursorclass=pymysql.cursors.DictCursor,
             autocommit=True
         )
+        conn.select_db('ride_share_request_database')
         return conn
 
     @staticmethod

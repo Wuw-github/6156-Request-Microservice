@@ -3,8 +3,10 @@ import json
 from requestDAO import RequestDAO
 from requestBoard import RequestBoard
 from response_service import Paginate, Hateoas
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 
 def get_request_dao():
@@ -53,7 +55,7 @@ def get_request_by_id(request_id):
     if request.method == "PUT":
         board = process_form_for_board(request.form)
         dao.update_request(request_id, board)
-        return redirect(url_for('get_all_requests', request_id=request_id))
+        return {"message": "request updated"}
 
     if request.method == "DELETE":
         dao.delete_participant(request_id, g.user_id)
@@ -66,12 +68,10 @@ def get_participants_by_id(request_id):
     check_user_login()
     if request.method == "GET":
         dao = get_request_dao()
-        result = dao.fetch_participants_by_request_id(request_id)
+        rsp = dao.fetch_participants_by_request_id(request_id)
 
-        rsp = {}
-        Paginate.paginate(request.path, result, request.args, rsp)
         Hateoas.link_participant_to_user_by_id(rsp)
-        if rsp['data']:
+        if rsp:
             rsp = Response(json.dumps(rsp, default=str), status=200, content_type="app.json")
         else:
             rsp = Response("NOT FOUND", status=404, content_type="text/plain")
@@ -80,14 +80,20 @@ def get_participants_by_id(request_id):
 
     if request.method == "DELETE":
         dao = get_request_dao()
-        dao.delete_participant(request_id, g.user_id)
-        return redirect(url_for("get_all_requests"))
+        try:
+            dao.delete_participant(request_id, g.user_id)
+        except:
+            return {"message": "You have not joined this List yet."}, 403
+        return {"message": "You have left"}
 
     if request.method == "POST":
         check_user_login()
         dao = get_request_dao()
-        dao.create_participant(request_id, g.user_id)
-        return redirect(url_for('get_participants_by_id', request_id=request_id))
+        try:
+            dao.create_participant(request_id, g.user_id)
+        except:
+            return {"message": "you already joined"}, 403
+        return {"message": "successfully joined"}
 
 
 def process_form_for_board(form):
@@ -107,6 +113,7 @@ def add_request():
     check_user_login()
     if request.method == 'POST':
         board = process_form_for_board(request.form)
+        print("here",request.form['date'], board)
         if RequestBoard.checkValidation(board):
             dao = get_request_dao()
             dao.create_request(board, g.user_id)

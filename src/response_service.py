@@ -40,7 +40,7 @@ class Hateoas:
 
     @staticmethod
     def link_participant_to_user_by_id(response):
-        for entry in response["data"]:
+        for entry in response:
             if "links" not in entry:
                 entry["links"] = {}
             user_id = entry["user_id"]
