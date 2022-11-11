@@ -2,14 +2,14 @@ import pymysql
 
 
 class RequestDAO:
-    def __init__(self):
-        self.conn = RequestDAO.get_connection()
+    
 
     def close(self):
         RequestDAO.close_connection(self)
 
     def fetch_all_requests(self, args):
-        cur = self.conn.cursor()
+        conn = RequestDAO.get_connection()
+        cur = conn.cursor()
         sql = "select * from requests where (1=1)"
         if args.get('start'):
             sql += f" and (start_location='{args.get('start')}')"
@@ -22,14 +22,16 @@ class RequestDAO:
         return output
 
     def fetch_request_by_id(self, request_id):
-        cur = self.conn.cursor()
+        conn = RequestDAO.get_connection()
+        cur = conn.cursor()
         sql = "select * from requests where request_id=%s"
         cur.execute(sql, args=request_id)
         result = cur.fetchone()
         return result
 
     def fetch_participants_by_request_id(self, request_id):
-        cur = self.conn.cursor()
+        conn = RequestDAO.get_connection()
+        cur = conn.cursor()
         sql = "select * from participants where request_id=%s"
         cur.execute(sql, args=request_id)
         result = cur.fetchall()
@@ -40,7 +42,8 @@ class RequestDAO:
               "(launch_date, start_time, start_location, destination, description, capacity) " \
               "values (%s, %s, %s, %s, %s, %s)"
 
-        cur = self.conn.cursor()
+        conn = RequestDAO.get_connection()
+        cur = conn.cursor()
         cur.execute(sql, [info.date, info.time, info.start_loc, info.dest, info.description, info.capacity])
 
         request_id = cur.lastrowid
@@ -50,11 +53,13 @@ class RequestDAO:
     def create_participant(self, request_id, user_id):
         sql = "insert into participants (request_id, user_id)" \
               "values (%s, %s)"
-        cur = self.conn.cursor()
+        conn = RequestDAO.get_connection()
+        cur = conn.cursor()
         cur.execute(sql, [request_id, user_id])
 
     def update_request(self, request_id, info):
-        cur = self.conn.cursor()
+        conn = RequestDAO.get_connection()
+        cur = conn.cursor()
         sql = """
             UPDATE requests
             SET launch_date=%s, start_time=%s, start_location=%s, destination=%s, description=%s, capacity=%s
@@ -63,12 +68,14 @@ class RequestDAO:
         cur.execute(sql, [info.date, info.time, info.start_loc, info.dest, info.description, info.capacity, request_id])
 
     def _delete_request(self, request_id):
-        cur = self.conn.cursor()
+        conn = RequestDAO.get_connection()
+        cur = conn.cursor()
         sql = "delete from requests where request_id=%s"
         cur.execute(sql, request_id)
 
     def delete_participant(self, request_id, user_id):
-        cur = self.conn.cursor()
+        conn = RequestDAO.get_connection()
+        cur = conn.cursor()
         sql = "delete from participants where request_id=%s and user_id=%s"
         cur.execute(sql, [request_id, user_id])
 

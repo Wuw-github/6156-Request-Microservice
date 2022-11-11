@@ -9,20 +9,18 @@ app = Flask(__name__)
 CORS(app)
 
 
-def get_request_dao():
-    if not hasattr(g, 'dao'):
-        g.dao = RequestDAO()
-    return g.dao
+dao = RequestDAO()
 
 
-def check_user_login():
-    if not hasattr(g, 'user_id'):
-        g.user_id = 1
+def check_user_login(request):
+    if request.headers.get('user_id'):
+        g.user_id = request.headers.get('user_id')
+    else:
+        g.user_id = None
 
 
 @app.route("/requests", methods=["GET"])
 def get_all_requests():
-    dao = get_request_dao()
     result = dao.fetch_all_requests(request.args)
 
     rsp = {}
@@ -38,20 +36,21 @@ def get_all_requests():
 
 @app.route("/requests/<request_id>", methods=["GET", "PUT", "DELETE"])
 def get_request_by_id(request_id):
-    dao = get_request_dao()
     if request.method == "GET":
         rsp = {}
         result = dao.fetch_request_by_id(request_id)
-        Paginate.paginate(request.path, [result], request.args, rsp)
-        Hateoas.link_request_to_participants_by_id(rsp)
-        if rsp['data']:
+        if result:
+            Paginate.paginate(request.path, [result], request.args, rsp)
+            Hateoas.link_request_to_participants_by_id(rsp)
             rsp = Response(json.dumps(rsp, default=str), status=200, content_type="app.json")
         else:
-            rsp = Response("NOT FOUND", status=404, content_type="text/plain")
+            rsp = {"message": "request not found"}, 404
 
         return rsp
 
-    check_user_login()
+    check_user_login(request)
+    if g.user_id is None:
+        return {"message": "Please log in first..."}, 403
     if request.method == "PUT":
         board = process_form_for_board(request.form)
         dao.update_request(request_id, board)
@@ -65,21 +64,21 @@ def get_request_by_id(request_id):
 
 @app.route("/requests/<request_id>/participants", methods=["GET", "DELETE", "POST"])
 def get_participants_by_id(request_id):
-    check_user_login()
+    check_user_login(request)
     if request.method == "GET":
-        dao = get_request_dao()
         rsp = dao.fetch_participants_by_request_id(request_id)
 
         Hateoas.link_participant_to_user_by_id(rsp)
         if rsp:
             rsp = Response(json.dumps(rsp, default=str), status=200, content_type="app.json")
         else:
-            rsp = Response("NOT FOUND", status=404, content_type="text/plain")
+            rsp = {"message": "Not Found"}, 404
 
         return rsp
+    if g.user_id is None:
+        return {"message": "Please log in first..."}, 403
 
     if request.method == "DELETE":
-        dao = get_request_dao()
         try:
             dao.delete_participant(request_id, g.user_id)
         except:
@@ -87,13 +86,12 @@ def get_participants_by_id(request_id):
         return {"message": "You have left"}
 
     if request.method == "POST":
-        check_user_login()
-        dao = get_request_dao()
+        check_user_login(request)
         try:
             dao.create_participant(request_id, g.user_id)
         except:
             return {"message": "you already joined"}, 403
-        return {"message": "successfully joined"}
+        return {"message": "successfully joined"}, 200
 
 
 def process_form_for_board(form):
@@ -110,18 +108,23 @@ def process_form_for_board(form):
 
 @app.route('/requests/create/', methods=['GET', "POST"])
 def add_request():
-    check_user_login()
+    check_user_login(request)
     if request.method == 'POST':
+        if g.user_id is None:
+            return {"message": "Please log in first..."}, 403
         board = process_form_for_board(request.form)
         print("here",request.form['date'], board)
         if RequestBoard.checkValidation(board):
-            dao = get_request_dao()
             dao.create_request(board, g.user_id)
             # flash('Board created')
-            return redirect(url_for('get_all_requests'))
-        return redirect(url_for('add_request'))
+            return {"message": "board is created"}, 200
+        return {"message": "inputs are not valid"}, 403
     return render_template('requests.html')
 
+@app.route('/login', methods=["POST"])
+def dunmmy_login():
+    check_user_login(request)
+    return {"token": "token123456"}
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5011, debug=True)
