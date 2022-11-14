@@ -21,10 +21,18 @@ def check_user_login(request):
 
 @app.route("/requests", methods=["GET"])
 def get_all_requests():
-    result = dao.fetch_all_requests(request.args)
 
+    paginate_param = Paginate.parse_paginate_input_params(request.args)
+    
+
+    # result = dao.fetch_all_requests(request.args)
+
+    # rsp = {}
+    # Paginate.paginate(request.path, result, request.args, rsp)
+
+    result = dao.fetch_all_requests_v2(request.args, paginate_param)
     rsp = {}
-    Paginate.paginate(request.path, result, request.args, rsp)
+    Paginate.paginate2(request.path, result, paginate_param, rsp)
     Hateoas.link_request_to_participants_by_id(rsp)
     if rsp['data']:
         rsp = Response(json.dumps(rsp, default=str), status=200, content_type="app.json")
@@ -50,7 +58,7 @@ def get_request_by_id(request_id):
 
     check_user_login(request)
     if g.user_id is None:
-        return {"message": "Please log in first..."}, 403
+        return {"message": "Please log in first..."}, 401
     if request.method == "PUT":
         board = process_form_for_board(request.form)
         dao.update_request(request_id, board)
@@ -76,7 +84,7 @@ def get_participants_by_id(request_id):
 
         return rsp
     if g.user_id is None:
-        return {"message": "Please log in first..."}, 403
+        return {"message": "Please log in first..."}, 401
 
     if request.method == "DELETE":
         try:
@@ -111,7 +119,7 @@ def add_request():
     check_user_login(request)
     if request.method == 'POST':
         if g.user_id is None:
-            return {"message": "Please log in first..."}, 403
+            return {"message": "Please log in first..."}, 401
         board = process_form_for_board(request.form)
         print("here",request.form['date'], board)
         if RequestBoard.checkValidation(board):

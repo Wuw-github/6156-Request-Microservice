@@ -2,7 +2,7 @@ class Paginate:
 
     @staticmethod
     def paginate(url, result, args, response):
-        limit = 6 if args.get('limit') is None else int(args.get('limit'))
+        limit = 5 if args.get('limit') is None else int(args.get('limit'))
         offset = 0 if args.get('offset') is None else int(args.get('offset'))
 
         if len(result) < offset or limit < 0:
@@ -26,6 +26,33 @@ class Paginate:
 
         response['data'] = result[offset:offset + limit]
         return response
+    
+    @staticmethod
+    def paginate2(url, result, paginate_params, rsp):
+        
+        if len(result) == 0:
+            rsp['next'] = ""
+        else:
+            start = paginate_params['offset'] + paginate_params['limit']
+            rsp['next'] = url + '?offset=%d&limit=%d' % (start, paginate_params['limit'])
+        
+        if paginate_params['offset'] == 0:
+            rsp['previous'] = ""
+        else:
+            start = max(0, paginate_params['offset'] - paginate_params['limit'])
+            rsp['previous'] = url + '?offset=%d&limit=%d' % (start, paginate_params['limit'])
+        
+        rsp['data'] = result
+        
+        return rsp
+
+    @staticmethod
+    def parse_paginate_input_params(args):
+        limit = 5 if args.get('limit') is None else int(args.get('limit'))
+        offset = 0 if args.get('offset') is None else int(args.get('offset'))
+        return {"limit": limit, "offset": offset}
+
+
 
 
 class Hateoas:

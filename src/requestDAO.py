@@ -21,6 +21,22 @@ class RequestDAO:
         output = cur.fetchall()
         return output
 
+    def fetch_all_requests_v2(self, args, paginate_param):
+        conn = RequestDAO.get_connection()
+        cur = conn.cursor()
+        sql = "select * from requests where (1=1)"
+        if args.get('start'):
+            sql += f" and (start_location='{args.get('start')}')"
+        if args.get('destination'):
+            sql += f" and (destination='{args.get('destination')}')"
+        if args.get('time'):
+            sql += f" and (start_time='{args.get('time')}')"
+        sql += f" LIMIT {paginate_param['limit']} OFFSET {paginate_param['offset']}"
+        
+        cur.execute(sql)
+        output = cur.fetchall()
+        return output
+
     def fetch_request_by_id(self, request_id):
         conn = RequestDAO.get_connection()
         cur = conn.cursor()
@@ -87,9 +103,9 @@ class RequestDAO:
     def get_connection():
         print("hahaha")
         conn = pymysql.connect(
-            user="hbstudent",
-            password="hbstudent",
-            host="localhost",
+            user="okcloud",
+            password="okcloudokcloud",
+            host="okcloud-requests-database.cw2ylftvdgpn.us-east-1.rds.amazonaws.com",
             cursorclass=pymysql.cursors.DictCursor,
             autocommit=True
         )
