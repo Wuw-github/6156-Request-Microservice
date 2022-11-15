@@ -101,6 +101,15 @@ def get_participants_by_id(request_id):
             return {"message": "you already joined"}, 403
         return {"message": "successfully joined"}, 200
 
+@app.route("/requests/par/<user_id>", methods=["GET"])
+def get_requests_by_user(user_id):
+    rsp = dao.fetch_request_id_by_participants(user_id)
+    if rsp:
+        rsp = Response(json.dumps(rsp, default=str), status=200, content_type="app.json")
+    else:
+        rsp = {"message": "No request found"}
+    return rsp
+
 
 def process_form_for_board(form):
     launch_date = request.form['date']
@@ -133,6 +142,13 @@ def add_request():
 def dunmmy_login():
     check_user_login(request)
     return {"token": "token123456"}
+
+@app.route('/sns_subscribe', methods=["POST"])
+def subscribe_sns():
+    data = request.get_json()
+    return {"message": "received",
+    "message": data.get('Message'),
+    "subscribeURL": data.get("SubscribeURL")}, 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5011, debug=True)

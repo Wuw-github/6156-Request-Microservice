@@ -99,6 +99,17 @@ class RequestDAO:
         if not participants:
             self._delete_request(request_id)
 
+    def fetch_request_id_by_participants(self,user_id):
+
+        conn = RequestDAO.get_connection()
+        cur = conn.cursor()
+        print('use sql')
+        print(user_id)
+        sql = "select request_id from participants where user_id=%s"
+        cur.execute(sql, args=user_id)
+        result = cur.fetchall()
+        return result
+
     @staticmethod
     def get_connection():
         print("hahaha")
