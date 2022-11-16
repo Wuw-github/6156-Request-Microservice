@@ -103,8 +103,7 @@ def get_participants_by_id(request_id):
 @app.route("/requests/participants/<user_id>", methods=["GET"])
 def get_requests_by_user(user_id):
     check_user_login(request)
-    g.user_id = "1"
-
+    
     if g.user_id != user_id:
         return {"message": "Not authorized to look other people's request"}, 401
 
@@ -160,4 +159,4 @@ def subscribe_sns():
     "subscribeURL": data.get("SubscribeURL")}, 200
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5011, debug=True)
+    app.run(host="0.0.0.0", port=5012, debug=True)
