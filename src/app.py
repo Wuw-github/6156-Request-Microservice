@@ -42,13 +42,13 @@ def get_all_requests():
     return rsp
 
 
-@app.route("/requests/<request_id>", methods=["GET", "PUT", "DELETE"])
+@app.route("/requests/<request_id>", methods=["GET", "PUT"])
 def get_request_by_id(request_id):
     if request.method == "GET":
         rsp = {}
         result = dao.fetch_request_by_id(request_id)
         if result:
-            Paginate.paginate(request.path, [result], request.args, rsp)
+            rsp = {'data': [result]}
             Hateoas.link_request_to_participants_by_id(rsp)
             rsp = Response(json.dumps(rsp, default=str), status=200, content_type="app.json")
         else:
@@ -61,13 +61,11 @@ def get_request_by_id(request_id):
         return {"message": "Please log in first..."}, 401
     if request.method == "PUT":
         board = process_form_for_board(request.form)
-        dao.update_request(request_id, board)
-        return {"message": "request updated"}
-
-    if request.method == "DELETE":
-        dao.delete_participant(request_id, g.user_id)
-
-        return redirect(url_for(get_all_requests))
+        try:
+            dao.update_request(request_id, board)
+        except e:
+            return {"message": "update failed"}, 403
+        return {"message": "request updated"}, 200
 
 
 @app.route("/requests/<request_id>/participants", methods=["GET", "DELETE", "POST"])
@@ -75,7 +73,7 @@ def get_participants_by_id(request_id):
     check_user_login(request)
     if request.method == "GET":
         rsp = dao.fetch_participants_by_request_id(request_id)
-
+        rsp = {"data": rsp}
         Hateoas.link_participant_to_user_by_id(rsp)
         if rsp:
             rsp = Response(json.dumps(rsp, default=str), status=200, content_type="app.json")
@@ -83,6 +81,7 @@ def get_participants_by_id(request_id):
             rsp = {"message": "Not Found"}, 404
 
         return rsp
+
     if g.user_id is None:
         return {"message": "Please log in first..."}, 401
 
@@ -101,9 +100,19 @@ def get_participants_by_id(request_id):
             return {"message": "you already joined"}, 403
         return {"message": "successfully joined"}, 200
 
-@app.route("/requests/par/<user_id>", methods=["GET"])
+@app.route("/requests/participants/<user_id>", methods=["GET"])
 def get_requests_by_user(user_id):
-    rsp = dao.fetch_request_id_by_participants(user_id)
+    check_user_login(request)
+    g.user_id = "1"
+
+    if g.user_id != user_id:
+        return {"message": "Not authorized to look other people's request"}, 401
+
+    paginate_param = Paginate.parse_paginate_input_params(request.args)
+    result = dao.fetch_request_id_by_participants(user_id)
+    rsp = {}
+    Paginate.paginate2(request.path, result, paginate_param, rsp)
+    Hateoas.link_request_id_to_request(rsp)
     if rsp:
         rsp = Response(json.dumps(rsp, default=str), status=200, content_type="app.json")
     else:

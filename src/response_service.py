@@ -67,9 +67,17 @@ class Hateoas:
 
     @staticmethod
     def link_participant_to_user_by_id(response):
-        for entry in response:
+        for entry in response["data"]:
             if "links" not in entry:
                 entry["links"] = {}
             user_id = entry["user_id"]
             entry["links"]["user"] = "/users/{id}".format(id=user_id)
         return response
+
+    @staticmethod
+    def link_request_id_to_request(response):
+        for entry in response["data"]:
+            if "links" not in entry:
+                entry["links"] = {}
+            request_id = entry["request_id"]
+            entry["links"]["request"] = "/requests/{id}".format(id=request_id)
