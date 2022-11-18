@@ -24,12 +24,6 @@ def get_all_requests():
 
     paginate_param = Paginate.parse_paginate_input_params(request.args)
     
-
-    # result = dao.fetch_all_requests(request.args)
-
-    # rsp = {}
-    # Paginate.paginate(request.path, result, request.args, rsp)
-
     result = dao.fetch_all_requests_v2(request.args, paginate_param)
     rsp = {}
     Paginate.paginate2(request.path, result, paginate_param, rsp)
@@ -138,6 +132,7 @@ def add_request():
         if g.user_id is None:
             return {"message": "Please log in first..."}, 401
         board = process_form_for_board(request.form)
+        print(board.start_loc)
         print("here",request.form['date'], board)
         if RequestBoard.checkValidation(board):
             dao.create_request(board, g.user_id)

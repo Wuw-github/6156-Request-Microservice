@@ -112,7 +112,6 @@ class RequestDAO:
 
     @staticmethod
     def get_connection():
-        print("hahaha")
         conn = pymysql.connect(
             user="okcloud",
             password="okcloudokcloud",
