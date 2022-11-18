@@ -30,11 +30,10 @@ def get_all_requests():
     Paginate.paginate2(request.path, result, paginate_param, rsp)
     Hateoas.link_request_to_participants_by_id(rsp)
     if rsp['data']:
-        rsp = Response(json.dumps(rsp, default=str), status=200, content_type="app.json")
+        rsp['statusCode'] = 200
     else:
-        rsp = Response("NOT FOUND", status=404, content_type="text/plain")
-
-    return rsp
+        rsp['statusCode'] = 404
+    return json.dumps(rsp)
 
 
 @app.route("/requests/<request_id>", methods=["GET", "PUT"])
@@ -155,4 +154,4 @@ def subscribe_sns():
     "subscribeURL": data.get("SubscribeURL")}, 200
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5012, debug=True)
+    app.run(host="0.0.0.0", port=5011, debug=True)
