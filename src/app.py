@@ -13,6 +13,8 @@ dao = RequestDAO()
 
 
 def check_user_login(request):
+    print(request.headers)
+    print(request.headers.get('user_id'))
     if request.headers.get('user_id'):
         g.user_id = request.headers.get('user_id')
     else:
