@@ -13,6 +13,7 @@ dao = RequestDAO()
 
 
 def check_user_login(request):
+    print(request.headers.get('user_id'))
     if request.headers.get('user_id'):
         g.user_id = request.headers.get('user_id')
     else:
@@ -125,7 +126,7 @@ def process_form_for_board(form):
     return board
 
 
-@app.route('/requests/create/', methods=['GET', "POST"])
+@app.route('/requests/create', methods=['GET', "POST"])
 def add_request():
     check_user_login(request)
     if request.method == 'POST':
