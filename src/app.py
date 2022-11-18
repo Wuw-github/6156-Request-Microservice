@@ -33,7 +33,7 @@ def get_all_requests():
         rsp['statusCode'] = 200
     else:
         rsp['statusCode'] = 404
-    return json.dumps(rsp)
+    return rsp
 
 
 @app.route("/requests/<request_id>", methods=["GET", "PUT"])
