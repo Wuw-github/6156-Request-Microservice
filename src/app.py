@@ -30,9 +30,10 @@ def get_all_requests():
     Paginate.paginate2(request.path, result, paginate_param, rsp)
     Hateoas.link_request_to_participants_by_id(rsp)
     if rsp['data']:
-        rsp['statusCode'] = 200
+        rsp = Response(json.dumps(rsp, default=str), status=200, content_type="app.json")
     else:
-        rsp['statusCode'] = 404
+        rsp = Response("NOT FOUND", status=404, content_type="text/plain")
+
     return rsp
 
 
