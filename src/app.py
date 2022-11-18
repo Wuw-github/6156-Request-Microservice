@@ -13,8 +13,6 @@ dao = RequestDAO()
 
 
 def check_user_login(request):
-    print(request.headers)
-    print(request.headers.get('user_id'))
     if request.headers.get('user_id'):
         g.user_id = request.headers.get('user_id')
     else:
@@ -96,15 +94,15 @@ def get_participants_by_id(request_id):
             return {"message": "you already joined"}, 403
         return {"message": "successfully joined"}, 200
 
-@app.route("/requests/participants/<user_id>", methods=["GET"])
-def get_requests_by_user(user_id):
+@app.route("/user/requests", methods=["GET"])
+def get_requests_by_user():
     check_user_login(request)
     
-    if g.user_id != user_id:
-        return {"message": "Not authorized to look other people's request"}, 401
+    if g.user_id is None:
+        return {"message": "Please login first..."}, 401
 
     paginate_param = Paginate.parse_paginate_input_params(request.args)
-    result = dao.fetch_request_id_by_participants(user_id)
+    result = dao.fetch_request_id_by_participants(g.user_id)
     rsp = {}
     Paginate.paginate2(request.path, result, paginate_param, rsp)
     Hateoas.link_request_id_to_request(rsp)
