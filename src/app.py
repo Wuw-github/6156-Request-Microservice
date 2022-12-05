@@ -4,20 +4,30 @@ from requestDAO import RequestDAO
 from requestBoard import RequestBoard
 from response_service import Paginate, Hateoas
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager, get_jwt, verify_jwt_in_request
 
 app = Flask(__name__)
+app.secret_key = 'it-is-hard-to-guess'
 CORS(app)
+jwt = JWTManager(app)
+
 
 
 dao = RequestDAO()
 
+WHITE_LIST = {
+    "get_all_requests": {"GET"},
+    "get_request_by_id": {"GET"},
+    }
 
-def check_user_login(request):
-    print(request.headers.get('user_id'))
-    if request.headers.get('user_id'):
-        g.user_id = request.headers.get('user_id')
-    else:
-        g.user_id = None
+@app.before_request
+def check_user_login():    
+    if request.endpoint in WHITE_LIST and request.method in WHITE_LIST[request.endpoint]:
+        return
+    verify_jwt_in_request()
+    user_id = get_jwt()['sub']
+    g.user_id = user_id
+    print(user_id)
 
 
 @app.route("/requests", methods=["GET"])
@@ -51,11 +61,10 @@ def get_request_by_id(request_id):
 
         return rsp
 
-    check_user_login(request)
     if g.user_id is None:
         return {"message": "Please log in first..."}, 401
     if request.method == "PUT":
-        board = process_form_for_board(request.form)
+        board = process_form_for_board(request)
         try:
             dao.update_request(request_id, board)
         except e:
@@ -65,7 +74,6 @@ def get_request_by_id(request_id):
 
 @app.route("/requests/<request_id>/participants", methods=["GET", "DELETE", "POST"])
 def get_participants_by_id(request_id):
-    check_user_login(request)
     if request.method == "GET":
         rsp = dao.fetch_participants_by_request_id(request_id)
         rsp = {"data": rsp}
@@ -88,7 +96,6 @@ def get_participants_by_id(request_id):
         return {"message": "You have left"}
 
     if request.method == "POST":
-        check_user_login(request)
         try:
             dao.create_participant(request_id, g.user_id)
         except:
@@ -97,7 +104,6 @@ def get_participants_by_id(request_id):
 
 @app.route("/user/requests", methods=["GET"])
 def get_requests_by_user():
-    check_user_login(request)
     
     if g.user_id is None:
         return {"message": "Please login first..."}, 401
@@ -114,13 +120,14 @@ def get_requests_by_user():
     return rsp
 
 
-def process_form_for_board(form):
-    launch_date = request.form['date']
-    time = request.form['time']
-    start_location = request.form['start_location']
-    destination = request.form['destination']
-    description = request.form['description']
-    capacity = request.form['capacity']
+def process_form_for_board(request):
+    data = request.form
+    launch_date = data['date']
+    time = data['time']
+    start_location = data['start_location']
+    destination = data['destination']
+    description = data['description']
+    capacity = data['capacity']
 
     board = RequestBoard(launch_date, time, start_location, destination, description, capacity)
     return board
@@ -128,13 +135,11 @@ def process_form_for_board(form):
 
 @app.route('/requests/create', methods=['GET', "POST"])
 def add_request():
-    check_user_login(request)
     if request.method == 'POST':
         if g.user_id is None:
             return {"message": "Please log in first..."}, 401
-        board = process_form_for_board(request.form)
+        board = process_form_for_board(request)
         print(board.start_loc)
-        print("here",request.form['date'], board)
         if RequestBoard.checkValidation(board):
             dao.create_request(board, g.user_id)
             # flash('Board created')
@@ -144,7 +149,6 @@ def add_request():
 
 @app.route('/login', methods=["POST"])
 def dunmmy_login():
-    check_user_login(request)
     return {"token": "token123456"}
 
 @app.route('/sns_subscribe', methods=["POST"])
